@@ -80,6 +80,7 @@ public class Board {
                                             Found a piece of same color.
                                              */
                                             piecesToFlip.addAll(tmpPiecesToFlip);
+                                            tmpPiecesToFlip = new ArrayList<>();
                                         } else {
                                             /*
                                             Bad path.
