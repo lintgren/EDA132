@@ -12,13 +12,17 @@ public class Main {
         boolean game = true;
         while(game){
             board.print();
-            System.out.println("type in tour move(x and y):");
+            board.showLegalMoves(-1);
+            System.out.println();
+            System.out.println("X : type in your move(x and y):");
             x = scan.nextInt();
             y = scan.nextInt();
             board.place(x,y,-1);
             System.out.println();
             board.print();
-            System.out.println("type in tour move(x and y):");
+            board.showLegalMoves(1);
+            System.out.println();
+            System.out.println("O : type in your move(x and y):");
             x = scan.nextInt();
             y = scan.nextInt();
             board.place(x,y,1);
