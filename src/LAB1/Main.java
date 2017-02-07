@@ -12,20 +12,33 @@ public class Main {
         boolean game = true;
         while(game){
             board.print();
-            board.showLegalMoves(-1);
+            //board.miniMaxAIMove(-1);
+            board.legalMoves(-1);
             System.out.println();
             System.out.println("X : type in your move(x and y):");
             x = scan.nextInt();
             y = scan.nextInt();
-            board.place(x,y,-1);
+            if(!board.place(x,y,-1)){
+                System.out.println("we have a winner!");
+                break;
+            }
             System.out.println();
+
             board.print();
-            board.showLegalMoves(1);
-            System.out.println();
-            System.out.println("O : type in your move(x and y):");
-            x = scan.nextInt();
-            y = scan.nextInt();
-            board.place(x,y,1);
+            try {
+                Thread.sleep((long) 0.4);
+            }catch (InterruptedException e){
+
+            }
+            //System.out.println();
+            //System.out.println("O : type in your move(x and y):");
+            //x = scan.nextInt();
+            //y = scan.nextInt();
+            //board.place(x,y,1);
+            if(!board.miniMaxAIMove(1)){
+                System.out.println("we have a winner!");
+                break;
+            }
             System.out.println();
         }
 

@@ -1,4 +1,5 @@
 package LAB1;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -8,8 +9,10 @@ public class Board {
     private int[][] field;
     private ArrayList<Integer> black;
     private ArrayList<Integer> white;
+    private MiniMax ai;
 
     public Board(){
+        ai = new MiniMax(0);
         for(int i =0;i<8;i++){
             for(int j=0;j<8;j++){
                 System.out.print((i*8+j));
@@ -30,6 +33,22 @@ public class Board {
         white.add(4*8+4);
     }
 
+    public int[][] getBoard(){
+        return field;
+    }
+
+    public boolean miniMaxAIMove(int value){
+        //int move = ai.calculateBestMove(field,value,6);
+        int move = ai.calculateBestMove2(field,value,6);
+        if(move<0){
+            return false;
+        }
+        int dx = move %8;
+        int dy = move/8;
+        place(dx,dy,value);
+        return true;
+    }
+
     public boolean place(int x,int y, int value){
         ArrayList<Integer> flips = viableMove(x,y,value);
         if(flips != null) {
@@ -39,11 +58,13 @@ public class Board {
                 field[x][y] = value;
                 field[dx][dy] *= (-1);
             }
+            return true;
+        }else {
+            return false;
         }
-        return true;
     }
 
-    public void showLegalMoves(int value){
+    public void legalMoves(int value){
         System.out.print("Legal moves(x,y): ");
         for(int x = 0;x<field.length;x++){
             for(int y= 0 ;y<field[x].length;y++){
@@ -124,6 +145,5 @@ public class Board {
             System.out.println();
         }
     }
-
 
 }
