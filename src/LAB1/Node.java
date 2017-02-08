@@ -34,4 +34,7 @@ class Node{
     public void setParentNode(Node parent){
         parentNode = parent;
     }
+    public List<Node> getChildren(){
+        return children;
+    }
 }

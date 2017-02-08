@@ -9,10 +9,8 @@ public class Board {
     private int[][] field;
     private ArrayList<Integer> black;
     private ArrayList<Integer> white;
-    private MiniMax ai;
 
     public Board(){
-        ai = new MiniMax(0);
         for(int i =0;i<8;i++){
             for(int j=0;j<8;j++){
                 System.out.print((i*8+j));
@@ -34,6 +32,8 @@ public class Board {
     }
 
     public Board(int[][] field){
+        //this.black = black;
+        //this.white = white;
         black = new ArrayList<>();
         white = new ArrayList<>();
         this.field = field;
@@ -122,6 +122,7 @@ public class Board {
 
     public ArrayList<Node> legalMoves(int value){
         ArrayList<Node> moves = new ArrayList<>();
+
         for(int x = 0;x<field.length;x++){
             for(int y= 0 ;y<field[x].length;y++){
                 if(viableMove(x,y,value) != null && !viableMove(x,y,value).isEmpty()){
@@ -129,14 +130,41 @@ public class Board {
                 }
             }
         }
+        /*
+        if(value<0){
+            /*
+             X moves
+
+            for(int piecePosition:white){
+                int dx = piecePosition % 8;
+                int dy = piecePosition / 8;
+                if(field[dx][dy] != 0){
+                    moves.add(new Node(dx,dy));
+                }
+            }
+        }else {
+            /*
+            O moves
+
+            for (int piecePosition : black) {
+                int dx = piecePosition % 8;
+                int dy = piecePosition / 8;
+                if (field[dx][dy] != 0) {
+                    moves.add(new Node(dx, dy));
+                }
+            }
+        }
+        */
         return moves;
     }
+
     public Board copyOfBoard(){
 
         int[][] copyOfCurrent = new int[field.length][];
         for(int i = 0; i < field.length; i++)
             copyOfCurrent[i] = field[i].clone();
         return new Board(copyOfCurrent);
+        //return new Board(copyOfCurrent, new ArrayList<>(black),new ArrayList<>(white));
     }
 
     private ArrayList<Integer> viableMove(int x, int y, int value){
