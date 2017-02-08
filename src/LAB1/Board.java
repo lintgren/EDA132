@@ -33,38 +33,17 @@ public class Board {
         white.add(4*8+4);
     }
 
+    public Board(int[][] field){
+        black = new ArrayList<>();
+        white = new ArrayList<>();
+        this.field = field;
+    }
+
     public int[][] getBoard(){
         return field;
     }
 
-    public boolean miniMaxAIMove(int value){
-        //int move = ai.calculateBestMove(field,value,6);
-        int move = ai.calculateBestMove2(field,value,6);
-        if(move<0){
-            return false;
-        }
-        int dx = move %8;
-        int dy = move/8;
-        place(dx,dy,value);
-        return true;
-    }
-
-    public boolean place(int x,int y, int value){
-        ArrayList<Integer> flips = viableMove(x,y,value);
-        if(flips != null) {
-            for (int i : flips) {
-                int dx = i % 8;
-                int dy = i / 8;
-                field[x][y] = value;
-                field[dx][dy] *= (-1);
-            }
-            return true;
-        }else {
-            return false;
-        }
-    }
-
-    public void legalMoves(int value){
+    public void printLegalMoves(int value){
         System.out.print("Legal moves(x,y): ");
         for(int x = 0;x<field.length;x++){
             for(int y= 0 ;y<field[x].length;y++){
@@ -75,7 +54,92 @@ public class Board {
         }
     }
 
-    public ArrayList<Integer> viableMove(int x, int y, int value){
+    public void print(){
+        System.out.println("\t0\t1\t2\t3\t4\t5\t6\t7");
+        for(int x= 0; x < field.length;x++){
+            System.out.print(x+"\t");
+            for(int y = 0 ; y<field[x].length;y++){
+                if(field[y][x]<0) {
+                    System.out.print("X");
+                }
+                else if(field[y][x]>0){
+                    System.out.print("O");
+                }else{
+                    System.out.print("#");
+                }
+                System.out.print("\t");
+            }
+            System.out.println();
+        }
+    }
+
+
+    public int whoWon(){
+        int winner = 0;
+        for(int x= 0;x<field.length;x++){
+            for(int y=0;y<field[x].length;y++){
+                winner += field[x][y];
+            }
+        }
+        return winner;
+/*
+        if(black.size()> white.size()){
+            return -1;
+        }
+        else if(white.size()>black.size()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+        */
+        //return winner;
+    }
+
+    public boolean place(int x,int y, int value){
+        ArrayList<Integer> flips = viableMove(x,y,value);
+        if(flips != null) {
+            if(value<0){
+                black.add(y*8+x);
+            }else{
+                white.add(y*8+x);
+            }
+            for (int i : flips) {
+                int dx = i % 8;
+                int dy = i / 8;
+                field[x][y] = value;
+                field[dx][dy] *= (-1);
+                if(value <0){
+                    black.add(i);
+                }
+                else{
+                    white.add(i);
+                }
+            }
+        }
+        return true;
+    }
+
+    public ArrayList<Node> legalMoves(int value){
+        ArrayList<Node> moves = new ArrayList<>();
+        for(int x = 0;x<field.length;x++){
+            for(int y= 0 ;y<field[x].length;y++){
+                if(viableMove(x,y,value) != null && !viableMove(x,y,value).isEmpty()){
+                    moves.add(new Node(x,y));
+                }
+            }
+        }
+        return moves;
+    }
+    public Board copyOfBoard(){
+
+        int[][] copyOfCurrent = new int[field.length][];
+        for(int i = 0; i < field.length; i++)
+            copyOfCurrent[i] = field[i].clone();
+        return new Board(copyOfCurrent);
+    }
+
+    private ArrayList<Integer> viableMove(int x, int y, int value){
         if(field[x][y] != 0) {
         }else {
             ArrayList<Integer> piecesToFlip = new ArrayList();
@@ -125,25 +189,6 @@ public class Board {
             return piecesToFlip;
         }
         return null;
-    }
-
-    public void print(){
-        System.out.println("\t0\t1\t2\t3\t4\t5\t6\t7");
-        for(int x= 0; x < field.length;x++){
-            System.out.print(x+"\t");
-            for(int y = 0 ; y<field[x].length;y++){
-                if(field[y][x]<0) {
-                    System.out.print("X");
-                }
-                else if(field[y][x]>0){
-                    System.out.print("O");
-                }else{
-                    System.out.print("#");
-                }
-                System.out.print("\t");
-            }
-            System.out.println();
-        }
     }
 
 }

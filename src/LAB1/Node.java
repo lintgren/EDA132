@@ -3,19 +3,19 @@ package LAB1;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node{
+class Node{
     private List<Node> children = new ArrayList<Node>();
     private Node parentNode = null;
     public int x;
     public int y;
-    public Node(){
+    protected Node(){
 
     }
-    public Node(int x,int y){
+    protected Node(int x,int y){
         this.x = x;
         this.y = y;
     }
-    public Node(int x, int y, Node parentNode){
+    protected Node(int x, int y, Node parentNode){
         this.x = x;
         this.y = y;
         this.parentNode = parentNode;
