@@ -32,8 +32,6 @@ public class Board {
     }
 
     public Board(int[][] field){
-        //this.black = black;
-        //this.white = white;
         black = new ArrayList<>();
         white = new ArrayList<>();
         this.field = field;
@@ -48,16 +46,18 @@ public class Board {
         for(int x = 0;x<field.length;x++){
             for(int y= 0 ;y<field[x].length;y++){
                 if(viableMove(x,y,value) != null && !viableMove(x,y,value).isEmpty()){
-                    System.out.print("("+x+","+y+")");
+                    System.out.print("("+(x+1)+","+Character.toString((char)('a'+y))+")");
                 }
             }
         }
     }
 
     public void print(){
-        System.out.println("\t0\t1\t2\t3\t4\t5\t6\t7");
+        System.out.println("\t1\t2\t3\t4\t5\t6\t7\t8");
         for(int x= 0; x < field.length;x++){
-            System.out.print(x+"\t");
+
+            System.out.print(Character.toString((char)('a'+x)));
+            System.out.print("\t");
             for(int y = 0 ; y<field[x].length;y++){
                 if(field[y][x]<0) {
                     System.out.print("X");
@@ -72,7 +72,11 @@ public class Board {
             System.out.println();
         }
     }
-
+    public boolean isGameFinished(int value){
+        if(white.size()+black.size()>63||legalMoves(value).isEmpty())
+            return true;
+        return false;
+    }
 
     public int whoWon(){
         int winner = 0;
@@ -98,7 +102,7 @@ public class Board {
 
     public boolean place(int x,int y, int value){
         ArrayList<Integer> flips = viableMove(x,y,value);
-        if(flips != null) {
+        if(!flips.isEmpty()) {
             if(value<0){
                 black.add(y*8+x);
             }else{
@@ -116,8 +120,12 @@ public class Board {
                     white.add(i);
                 }
             }
+            return true;
         }
-        return true;
+        else {
+            System.out.println("You cannot place it here");
+            return false;
+        }
     }
 
     public ArrayList<Node> legalMoves(int value){
@@ -130,31 +138,6 @@ public class Board {
                 }
             }
         }
-        /*
-        if(value<0){
-            /*
-             X moves
-
-            for(int piecePosition:white){
-                int dx = piecePosition % 8;
-                int dy = piecePosition / 8;
-                if(field[dx][dy] != 0){
-                    moves.add(new Node(dx,dy));
-                }
-            }
-        }else {
-            /*
-            O moves
-
-            for (int piecePosition : black) {
-                int dx = piecePosition % 8;
-                int dy = piecePosition / 8;
-                if (field[dx][dy] != 0) {
-                    moves.add(new Node(dx, dy));
-                }
-            }
-        }
-        */
         return moves;
     }
 
@@ -164,7 +147,6 @@ public class Board {
         for(int i = 0; i < field.length; i++)
             copyOfCurrent[i] = field[i].clone();
         return new Board(copyOfCurrent);
-        //return new Board(copyOfCurrent, new ArrayList<>(black),new ArrayList<>(white));
     }
 
     private ArrayList<Integer> viableMove(int x, int y, int value){

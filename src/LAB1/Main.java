@@ -1,49 +1,42 @@
 package LAB1;
-
 import java.util.Scanner;
+import java.util.stream.Collector;
 
 public class Main {
 
 
     public static void main(String[] args) {
         Board board = new Board();
-        MiniMax ai = new MiniMax(0, board);
+        MiniMax ai = new MiniMax(2000,board);
         Scanner scan = new Scanner(System.in);
         int x;
         int y;
         boolean game = true;
+        boolean successfulMove;
         while (game) {
             board.print();
-            //board.miniMaxAIMove(-1);
             board.legalMoves(-1);
             System.out.println();
             board.printLegalMoves(-1);
             System.out.println("X : type in your move(x and y):");
             x = scan.nextInt();
-            y = scan.nextInt();
-            if (!board.place(x, y, -1)) {
-                System.out.println("we have a winner!");
-                break;
+            y = scan.next().charAt(0)-97;
+            int b = (y);
+            successfulMove= board.place(x-1,y,-1);
+            if (successfulMove) {
+                if(board.isGameFinished(-1)){
+                    System.out.println("Winner!! X is negative 0 is positive Sum of all pieces:");
+                    System.out.println(board.whoWon());
+                }
+                board.print();
+                ai.miniMaxAIMove(1);
+                if(board.isGameFinished(1)){
+                    System.out.println("Winner!! X is negative O is positive Sum of all pieces:");
+                    System.out.println(board.whoWon());
+                }
+                System.out.println();
             }
-            System.out.println();
 
-            board.print();
-            try {
-                Thread.sleep((long) 0.4);
-            } catch (InterruptedException e) {
-
-            }
-            //System.out.println();
-            //System.out.println("O : type in your move(x and y):");
-            //x = scan.nextInt();
-            //y = scan.nextInt();
-            //board.place(x,y,1);
-            //if(!board.miniMaxAIMove(1)){
-            if (!ai.miniMaxAIMove(1)) {
-                System.out.println("we have a winner!");
-                break;
-            }
-            System.out.println();
         }
     }
 }

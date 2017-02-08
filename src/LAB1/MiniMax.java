@@ -13,14 +13,9 @@ public class MiniMax {
     private long startTime;
 
     //TODO: pruning, skicka med bästa värdet och jämföra med det??
-    public MiniMax(long time){
-        white = new ArrayList<>();
-        black = new ArrayList<>();
-        this.time = time;
-    }
     public boolean miniMaxAIMove(int value){
         //int move = ai.calculateBestMove(field,value,6);
-        int move = calculateBestMove2(value,2);
+        int move = calculateBestMove(value,7);
         if(move<0){
             return false;
         }
@@ -33,10 +28,10 @@ public class MiniMax {
     public MiniMax(long time,Board board){
         white = new ArrayList<>();
         black = new ArrayList<>();
-        this.board = board;
         this.time = time;
+        this.board = board;
     }
-    public int calculateBestMove2(int color,int depth){
+    public int calculateBestMove(int color, int depth){
         startTime = System.currentTimeMillis();
         Node bestNode =null;
         Node root = new Node();
@@ -49,15 +44,18 @@ public class MiniMax {
             //move.parentNode = root;
             root.addChild(move);
             int winningColor;
-            winningColor = simulatedPlays2(copyOfCurrent, color * -1, move, depth, false,score);
-            if(winningColor>score)
-                    bestNode = move;
+            winningColor = simulatedPlays(copyOfCurrent, color * -1, move, depth, false,score);
+            if(winningColor>score) {
+                bestNode = move;
+                score = winningColor;
+                root.score = score;
+            }
         }
-        printFukkinbroaaah(root);
         return bestNode.y*8+bestNode.x;
+
     }
 
-    public int simulatedPlays2(Board board,int value,Node currentMove,int depth,boolean maxOrMin,int currentBestScore){
+    public int simulatedPlays(Board board, int value, Node currentMove, int depth, boolean maxOrMin, int currentBestScore){
 
         depth--;
         ArrayList<Node> moves = board.legalMoves(value);
@@ -65,8 +63,8 @@ public class MiniMax {
         int min = Integer.MAX_VALUE;
         if(!moves.isEmpty() && depth>0) {
             for(Node move:moves){
-                if((startTime+time-System.currentTimeMillis())>0){
-                    if(maxOrMin)
+                if((startTime+time-System.currentTimeMillis())<=0){
+                    if(value>0)
                         return max;
                     else
                         return min;
@@ -75,55 +73,37 @@ public class MiniMax {
                 copyOfCurrent.place(move.x,move.y,value);
                 move.setParentNode(currentMove);
                 currentMove.addChild(move);
-                int score = simulatedPlays2(copyOfCurrent,value*-1,move,depth,!maxOrMin,max);
-                if(maxOrMin){
-                    /*
-                    Maximizzeee
-                     */
-                    if(value>0 && score>max) {
-                        max = score;
-                    }else  if(value<0 && min< score){
+                if(value==1){
+                    int score = simulatedPlays(copyOfCurrent,value*-1,move,depth,!maxOrMin,max);
+                    if(score>max){
+                        max= score;
+                    }
+                }else{
+                    int score = simulatedPlays(copyOfCurrent,value*-1,move,depth,!maxOrMin,min);
+                    if(score<min){
                         min = score;
                     }
-                }else {
-                    /*
-                    Minimiiiizeeeeeaah
-                     */
-                    //int score = simulatedPlays2(copyOfCurrent, value * -1, move, depth, !maxOrMin, min);
-                    if (value > 0 && score < min)
-                        min = score;
-                    else if (value < 0 && score > max)
-                        max = score;
                 }
-              //  if(!maxOrMin && min > currentBestScore){
+                if(value<0 && min<currentBestScore){
                     /*
-                    vi ska minimera och därför om värdet blir större bör vi sluta räkna på nya moves
+                    Pruning.
                      */
-              //      return min;
-              //  }
-            }
+                    currentMove.score = min;
+                    return min;
+                }
 
-            if((maxOrMin && value>0)||(value<0&&!maxOrMin)){
+
+
+            }
+            if(value>0){
+                currentMove.score = max;
                 return max;
             }
+            currentMove.score = min;
             return min;
         }
+        currentMove.score = board.whoWon();
         return board.whoWon();
-    }
-    private String printFukkinbroaaah(Node currentNode){
-        String number="";
-        if(currentNode.getChildren().isEmpty()){
-            number = currentNode.x+"."+currentNode.y+"\t";
-            System.out.print(currentNode.x);
-            System.out.print('.');
-            System.out.print(currentNode.y);
-            System.out.print('\t');
-            return number;
-        }
-        for(Node kiddo:currentNode.getChildren()){
-            number += printFukkinbroaaah(kiddo);
-        }
-        return  number+" \n "+currentNode.x+"."+currentNode.y;
     }
 
 }
