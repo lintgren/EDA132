@@ -15,7 +15,7 @@ public class MiniMax {
     //TODO: pruning, skicka med bästa värdet och jämföra med det??
     public boolean miniMaxAIMove(int value){
         //int move = ai.calculateBestMove(field,value,6);
-        int move = calculateBestMove(value,7);
+        int move = calculateBestMove(value,8);
         if(move<0){
             return false;
         }
