@@ -197,23 +197,26 @@ def prune(tree):
                 prune(child)
         if leaf_children:
             class_dist = sum(j for i, j in tree.values)
-            attr_pos_proportion = tree.values[0][1]/class_dist
-            attr_neg_proportion = tree.values[1][1]/class_dist
+            k = tree.values.__len__()
+            m = tree.children.__len__()
+            attr_pos_proportion = (tree.values[0][0],tree.values[0][1]/class_dist)
+            attr_neg_proportion = (tree.values[1][0],tree.values[1][1]/class_dist)
             total_deviation = 0
             for child in tree.children:
-                nk = child.values[0][1]
-                if child.values.__len__() ==1:
-                    pk = 0
-                else:
-                    nk = child.values[1][1]
-                pk_calc = pk/(pk+nk)
-                nk_calc= nk/(pk + nk)
-                pk_hat = attr_pos_proportion*(pk+nk)
-                nk_hat = attr_neg_proportion*(pk+nk)
-                total_deviation += (math.pow(pk-pk_hat,2)/pk_hat)+(math.pow(nk-nk_hat,2)/nk_hat)
-            prob = chi2.cdf(1,4,total_deviation)
-            if prob>= 0.95:
-               return tree(max(tree.values,key=itemgetter(1)))
+                for i,j in child.values:
+                    pk = j
+                    pk_hat =0
+                    if attr_neg_proportion[0] == i:
+                        pk_hat = attr_pos_proportion[1] * (pk)
+                    else:
+                        pk_hat = attr_neg_proportion[1] * (pk)
+                    total_deviation += (math.pow(pk-pk_hat,2)/pk_hat)
+            p_value = chi2.cdf(total_deviation, df=(m - 1) * (k - 1))
+            if p_value>= 0.95:
+                tree.children = []
+                tree.values =[max(tree.values,key=itemgetter(1))]
+                tree.name = max(tree.values,key=itemgetter(1))
+                # return tree(max(tree.values,key=itemgetter(1)))
             else:
                 return tree
 
@@ -264,5 +267,6 @@ dx,dy =update_data_set(x,y,3,"'y'")
 #     print(calc_gain(dx,dy,idx,attrs[attr],class_values))
 root_node = rec(x,y,attrNameList,attrs,x,class_values)
 print(root_node.__str__())
+prune(root_node)
 prune(root_node)
 print(root_node.__str__())
