@@ -1,6 +1,8 @@
 import os
 import regex as re
-import Tree
+import math
+from Tree import Tree
+from operator import itemgetter
 
 def get_attr(text, filename):
     dictWithAttr = dict()
@@ -8,23 +10,36 @@ def get_attr(text, filename):
     regForAttr = re.compile(r"(?<=@attribute )['a-z'|-]*")
     for itr_attr in regForAttr.finditer(text.lower()):
         attr = itr_attr.group()
-        reg_values_part = re.compile(r"(?<="+attr+" ){[a-z||\'||\ ||\,]*}")
+        reg_values_part = re.compile("(?<="+attr+" ){[A-Z||a-z||\'||\ ||\,]*}")
         dictWithAttr[attr[1:-1]] = list()
         attrNameList.append(attr[1:-1])
         for values_part in reg_values_part.finditer(text.lower()):
-            reg_value = re.compile(r"'[a-z]*'")
+            reg_value = re.compile(r"\'[a-z]*\'")
+            # reg_value = re.compile("[A-za-z]+")
+            # reg_values = re.compile(r"[a-z]*")
             '''dictWithAttr[attr[1:-1]] = [None]*sum(1 for _ in reg_value.finditer(values_part.group()))'''
             for idx,value in enumerate(reg_value.finditer(values_part.group())):
-                dictWithAttr[attr[1:-1]].append(value.group()[1:-1])
+                dictWithAttr[attr[1:-1]].append(value.group())
                 '''dictWithAttr[attr[1:-1]][idx] = (value.group()[1:-1])'''
     return attrNameList,dictWithAttr
 
 def get_data(text):
-    regForAttr = re.compile(r"(?<=@attribute )['a-z'|-]*")
-    for itr_attr in regForAttr.finditer(text.lower()):
-        print(itr_attr)
-
-    return 0
+    re_data_field = re.compile("(?<=@data)[^.]*")
+    x = list()
+    y= list()
+    for data_field in re_data_field.finditer(text.lower()):
+        re_data_row = re.compile("[^\n||^%]+")
+        for data_row in re_data_row.finditer(data_field.group()):
+            re_data_value = re.compile("[^\,]+")
+            dx = list()
+            for data_value in re_data_value.finditer(data_row.group()):
+                if data_value.group():
+                    dx.append(data_value.group())
+            if dx.__len__()>0:
+                last = dx.pop(-1)
+                y.append(last)
+                x.append(dx)
+    return x,y
 
 def get_files(dir, suffix):
     """
@@ -39,19 +54,181 @@ def get_files(dir, suffix):
             files.append(file)
     return files
 
+def get_sum_y_value(y,y_value):
+    total = 0
+    for value in y:
+        if value == y_value:
+            total += 1
+    return total
 
-'''fileNames = get_files(fileName,"arff")'''
-'''for filename in fileNames:'''
-attrNameList,attrs = get_attr(open("data/" + "vote.arff").read(), "hej")
-data_list = get_data(open("data/" + "vote.arff").read(),attrNameList.count())
-for key, value in attrs.items():
-    print(key)
-    for m in value:
-        print(m)
-'''t = Tree('*', [Tree('1'),
-               Tree('2'),
-               Tree('+', [Tree('3'),
-                          Tree('4')])])'''
-'''filename[:-4])'''
+def split(x,y,column_index,x_value,y_value):
+    '''
+    How many rep or demo that answered x_value for the question at column_index
+    :param x:
+    :param y:
+    :param column_index:
+    :param x_value:
+    :param y_value:
+    :return:
+    '''
+    total = 0
+    for idx,row in enumerate(x):
+        if row[column_index] == x_value and y[idx] == y_value:
+           total += 1
+    return total
+
+def get_sum_y_value_node(x,column_index,x_value):
+    total = 0
+    for idx, row in enumerate(x):
+        if row[column_index] == x_value:
+            total += 1
+    return total
+
+def update_data_set(x,y,column_index,x_value):
+    dx = list()
+    dy = list()
+    for idx,row in enumerate(x):
+        if row[column_index] == x_value:
+            dx.append(row)
+            dy.append(y[idx])
+    return dx,dy
 
 
+def calc_gain(x, y, column_index, x_value_list, y_value_list):
+    class_amount = list()
+    for y_value in y_value_list:
+        class_amount.append(get_sum_y_value(y,y_value))
+    # total_class_dist = y_value_list.__len__()
+    total_class_dist = sum(class_amount)
+    data_set_entropy = 0
+    for class_value in class_amount:
+        data_set_entropy -= (class_value/total_class_dist)*math.log2(class_value/total_class_dist)
+    gain = data_set_entropy
+    for x_value in x_value_list:
+        node_entropy = 0
+        total_sub_set = get_sum_y_value_node(x,column_index,x_value)
+        for y_value in y_value_list:
+            node_dist = split(x,y,column_index,x_value,y_value)
+            if node_dist != 0:
+                node_entropy -= (node_dist/total_sub_set)*math.log2(node_dist/total_sub_set)
+        gain -= (total_sub_set/total_class_dist)*node_entropy
+    return gain
+
+def find_best_gain_index(x,y,attrs,attrNameList,class_values):
+    best_gain_index = -1
+    best_gain = -1
+    for key, values in attrs.items():
+        for index, attr in enumerate(attrNameList):
+            if attr != "class" and attr == key:
+                '''
+                attr == key för att hitta de olika values som vi får fram i attr.items() så det inte blir fel values.
+                '''
+                gain = calc_gain(x, y, index, values, class_values)
+                if gain > best_gain:
+                    best_gain = gain
+                    best_gain_index = index
+    if best_gain > 0:
+        return best_gain,best_gain_index
+    else:
+        return -1, -1
+
+def is_pure_set(y):
+    first_item =None
+    if y.__len__() >0:
+        first_item = y[0]
+    else:
+        return False, None
+    for row in y:
+        if row != first_item:
+            return False,None
+    return True,first_item
+
+
+def rec(x,y,attrNameList,attrs,parent_examples,class_values):
+    node = Tree()
+    is_pure,first_item = is_pure_set(y)
+    if(x.__len__()==0):
+        class_amount = list()
+        for y_value in class_values:
+            class_amount.append((y_value,get_sum_y_value(parent_examples, y_value)))
+        return Tree(max(class_amount,key=itemgetter(1)))
+    elif(is_pure):
+        return Tree(first_item + " " + str(y.__len__()))
+    elif(attrNameList.__len__()==0):
+        class_amount = list()
+        for y_value in class_values:
+            class_amount.append((y_value, get_sum_y_value(y, y_value)))
+        return Tree(max(class_amount, key=itemgetter(1)))
+    else:
+        best_gain,best_gain_index = find_best_gain_index(x,y,attrs,attrNameList,class_values)
+        # print(best_gain_index)
+        node.name = attrNameList[best_gain_index]
+        tmp_attrs = attrs.copy()
+        x_values = tmp_attrs.pop(attrNameList[best_gain_index])
+        for value in x_values:
+            '''
+            höger eller vänster
+            '''
+            dx = x.copy()
+            dy = y.copy()
+            ddx, ddy = update_data_set(dx, dy, best_gain_index, value)
+            tmp_attrNameList = attrNameList[:]
+            tmp_attrNameList.pop(best_gain_index)
+            node.add_child(rec(ddx,ddy,tmp_attrNameList,tmp_attrs,dy,class_values))
+            # best_gain, best_gain_index = find_best_gain_index(ddx, ddy, tmp_attrs, tmp_attrNameList, class_values)
+            # if best_gain == 1 or best_gain == 0:
+            #     return Tree('leaf')
+            # if best_gain_index > -1:
+            #     node.add_child(rec(ddx, ddy,tmp_attrNameList,tmp_attrs,dx,class_values))
+    return node
+
+
+# def rec(x,y,column_index,attrNameList,attrs,min_num_obj,last_gain):
+#     node = Tree()
+#     if attrNameList.__len__() == 0 or x.__len__() == 0:
+#         return Tree("leaf")
+#     else:
+#         node.name = attrNameList[column_index]
+#         tmp_attrs = attrs.copy()
+#         x_values = tmp_attrs.pop(attrNameList[column_index])
+#         for value in x_values:
+#             '''
+#             höger eller vänster
+#             '''
+#             dx =x.copy()
+#             dy = y.copy()
+#             ddx,ddy = update_data_set(dx,dy,column_index,value)
+#             tmp_attrNameList = attrNameList[:]
+#             tmp_attrNameList.pop(column_index)
+#             best_gain,best_gain_index = find_best_gain_index(ddx,ddy,tmp_attrs,tmp_attrNameList,class_values)
+#             if best_gain==1 or best_gain == 0 or best_gain == last_gain:
+#                 return Tree('leaf')
+#             if best_gain_index > -1:
+#                 node.add_child(rec(ddx,ddy,best_gain_index,tmp_attrNameList,tmp_attrs,min_num_obj,last_gain))
+#     return node
+
+
+data_set = "vote.arff"
+# data_set = "weather.nominal.arff"
+attrNameList,attrs = get_attr(open("data/" + data_set).read(), "hej")
+print(attrs)
+class_values = attrs.pop("class")
+attrNameList.pop(attrNameList.__len__()-1)
+x,y= get_data(open("data/" + data_set).read())
+best_gain,best_gain_index = find_best_gain_index(x,y,attrs,attrNameList,class_values)
+print(best_gain_index)
+a =0
+for dx in x:
+    if dx[3] == "'y'":
+        a +=1
+print(a)
+print(x.__len__())
+dx,dy =update_data_set(x,y,3,"'y'")
+print(dx.__len__())
+# attrs.pop(attrNameList[3])
+# attrNameList.pop(3)
+# for idx,attr in enumerate(attrNameList):
+#     print(attr)
+#     print(calc_gain(dx,dy,idx,attrs[attr],class_values))
+root_node = rec(x,y,attrNameList,attrs,x,class_values)
+print(root_node.__str__())
