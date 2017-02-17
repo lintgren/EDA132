@@ -3,6 +3,7 @@ import regex as re
 import math
 from Tree import Tree
 from operator import itemgetter
+from scipy.stats import chi2
 
 def get_attr(text, filename):
     dictWithAttr = dict()
@@ -105,6 +106,7 @@ def calc_gain(x, y, column_index, x_value_list, y_value_list):
         data_set_entropy -= (class_value/total_class_dist)*math.log2(class_value/total_class_dist)
     gain = data_set_entropy
     for x_value in x_value_list:
+
         node_entropy = 0
         total_sub_set = get_sum_y_value_node(x,column_index,x_value)
         for y_value in y_value_list:
@@ -112,6 +114,8 @@ def calc_gain(x, y, column_index, x_value_list, y_value_list):
             if node_dist != 0:
                 node_entropy -= (node_dist/total_sub_set)*math.log2(node_dist/total_sub_set)
         gain -= (total_sub_set/total_class_dist)*node_entropy
+    # if x.__len__()== 2:
+    #     print(str(gain) + "\t" +str(column_index))
     return gain
 
 def find_best_gain_index(x,y,attrs,attrNameList,class_values):
@@ -127,10 +131,7 @@ def find_best_gain_index(x,y,attrs,attrNameList,class_values):
                 if gain > best_gain:
                     best_gain = gain
                     best_gain_index = index
-    if best_gain > 0:
-        return best_gain,best_gain_index
-    else:
-        return -1, -1
+    return best_gain,best_gain_index
 
 def is_pure_set(y):
     first_item =None
@@ -151,18 +152,21 @@ def rec(x,y,attrNameList,attrs,parent_examples,class_values):
         class_amount = list()
         for y_value in class_values:
             class_amount.append((y_value,get_sum_y_value(parent_examples, y_value)))
-        return Tree(max(class_amount,key=itemgetter(1)))
+        return Tree(max(class_amount,key=itemgetter(1)),class_amount)
     elif(is_pure):
-        return Tree(first_item + " " + str(y.__len__()))
+        return Tree(first_item + " " + str(y.__len__()),[(first_item,y.__len__())])
     elif(attrNameList.__len__()==0):
         class_amount = list()
         for y_value in class_values:
             class_amount.append((y_value, get_sum_y_value(y, y_value)))
-        return Tree(max(class_amount, key=itemgetter(1)))
+        return Tree(max(class_amount, key=itemgetter(1)),class_amount)
     else:
         best_gain,best_gain_index = find_best_gain_index(x,y,attrs,attrNameList,class_values)
-        # print(best_gain_index)
         node.name = attrNameList[best_gain_index]
+        adsf = list()
+        for class_value in class_values:
+            adsf.append((class_value,y.count(class_value)))
+        node.values = adsf
         tmp_attrs = attrs.copy()
         x_values = tmp_attrs.pop(attrNameList[best_gain_index])
         for value in x_values:
@@ -173,7 +177,7 @@ def rec(x,y,attrNameList,attrs,parent_examples,class_values):
             dy = y.copy()
             ddx, ddy = update_data_set(dx, dy, best_gain_index, value)
             tmp_attrNameList = attrNameList[:]
-            tmp_attrNameList.pop(best_gain_index)
+            tmp_attrNameList[best_gain_index] = None
             node.add_child(rec(ddx,ddy,tmp_attrNameList,tmp_attrs,dy,class_values))
             # best_gain, best_gain_index = find_best_gain_index(ddx, ddy, tmp_attrs, tmp_attrNameList, class_values)
             # if best_gain == 1 or best_gain == 0:
@@ -181,6 +185,39 @@ def rec(x,y,attrNameList,attrs,parent_examples,class_values):
             # if best_gain_index > -1:
             #     node.add_child(rec(ddx, ddy,tmp_attrNameList,tmp_attrs,dx,class_values))
     return node
+
+def prune(tree):
+    if(tree.check_if_leaf()):
+        return tree
+    else:
+        leaf_children = True
+        for child in tree.children:
+            if(not child.check_if_leaf()):
+                leaf_children = False
+                prune(child)
+        if leaf_children:
+            class_dist = sum(j for i, j in tree.values)
+            attr_pos_proportion = tree.values[0][1]/class_dist
+            attr_neg_proportion = tree.values[1][1]/class_dist
+            total_deviation = 0
+            for child in tree.children:
+                nk = child.values[0][1]
+                if child.values.__len__() ==1:
+                    pk = 0
+                else:
+                    nk = child.values[1][1]
+                pk_calc = pk/(pk+nk)
+                nk_calc= nk/(pk + nk)
+                pk_hat = attr_pos_proportion*(pk+nk)
+                nk_hat = attr_neg_proportion*(pk+nk)
+                total_deviation += (math.pow(pk-pk_hat,2)/pk_hat)+(math.pow(nk-nk_hat,2)/nk_hat)
+            prob = chi2.cdf(1,4,total_deviation)
+            if prob>= 0.95:
+               return tree(max(tree.values,key=itemgetter(1)))
+            else:
+                return tree
+
+
 
 
 # def rec(x,y,column_index,attrNameList,attrs,min_num_obj,last_gain):
@@ -211,24 +248,21 @@ def rec(x,y,attrNameList,attrs,parent_examples,class_values):
 data_set = "vote.arff"
 # data_set = "weather.nominal.arff"
 attrNameList,attrs = get_attr(open("data/" + data_set).read(), "hej")
-print(attrs)
 class_values = attrs.pop("class")
 attrNameList.pop(attrNameList.__len__()-1)
 x,y= get_data(open("data/" + data_set).read())
 best_gain,best_gain_index = find_best_gain_index(x,y,attrs,attrNameList,class_values)
-print(best_gain_index)
 a =0
 for dx in x:
     if dx[3] == "'y'":
         a +=1
-print(a)
-print(x.__len__())
 dx,dy =update_data_set(x,y,3,"'y'")
-print(dx.__len__())
 # attrs.pop(attrNameList[3])
 # attrNameList.pop(3)
 # for idx,attr in enumerate(attrNameList):
 #     print(attr)
 #     print(calc_gain(dx,dy,idx,attrs[attr],class_values))
 root_node = rec(x,y,attrNameList,attrs,x,class_values)
+print(root_node.__str__())
+prune(root_node)
 print(root_node.__str__())

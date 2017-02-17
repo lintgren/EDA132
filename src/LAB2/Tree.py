@@ -1,9 +1,9 @@
 class Tree(object):
     "Generic tree node."
-    def __init__(self, name='root', children=None):
+    def __init__(self, name='root',values =[] ,children=None):
         self.name = name
         self.nodes = []
-        self.value =0
+        self.values = values
         self.children = []
         if children is not None:
             for child in children:
@@ -29,3 +29,8 @@ class Tree(object):
         for child in self.children:
             ret += child.__str__(level + 1)
         return ret
+
+    def check_if_leaf(self):
+        if self.children.__len__()>0:
+            return False
+        return True
