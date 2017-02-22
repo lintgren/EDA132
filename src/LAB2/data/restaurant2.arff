@@ -1,0 +1,25 @@
+% 1. Title: Restaurant domain
+%
+% 2. Sources:
+%		Artificial Intelligence, A Modern Approach
+%
+@RELATION restaurant
+
+@ATTRIBUTE Alt {Yes,No}
+@ATTRIBUTE Bar {Yes,No}
+@ATTRIBUTE Fri {Yes,No}
+@ATTRIBUTE Hun {Yes,No}
+@ATTRIBUTE Price {$,$$,$$$}
+@ATTRIBUTE Rain {Yes,No}
+@ATTRIBUTE Res {Yes,No}
+@ATTRIBUTE Type {French,Thai,Italian,Burguer}
+@ATTRIBUTE Est {0-10,10-30,30-60,>60}
+@ATTRIBUTE WillWait {Yes,No}
+
+@DATA
+Yes,No,No,Yes,$,No,No,Thai,30-60,No
+Yes,No,Yes,Yes,$,Yes,No,Thai,10-30,Yes
+Yes,No,Yes,No,$$$,No,Yes,French,>60,No
+No,Yes,Yes,No,$,Yes,No,Burguer,>60,No
+Yes,Yes,Yes,Yes,$$$,No,Yes,Italian,10-30,No
+Yes,Yes,Yes,Yes,$,No,No,Burguer,30-60,Yes
