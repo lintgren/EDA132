@@ -2,17 +2,27 @@ package LAB3.model;
 
 import LAB3.control.EstimatorInterface;
 
+import java.util.Random;
+
 public class DummyLocalizer implements EstimatorInterface {
 		
-	private int rows, cols, head;
+	private int rows, cols, head, currX, currY;
+	private double transitionProb[][];
+	private double emissionProb[][];
 
 	public DummyLocalizer( int rows, int cols, int head) {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
+		this.transitionProb = new double[rows][cols];
+		this.emissionProb = new double[rows][cols];
+		this.emissionProb = new double[rows][cols];
+
+
+
 		
-	}	
-	
+	}
+
 	public int getNumRows() {
 		return rows;
 	}
