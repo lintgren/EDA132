@@ -1,6 +1,7 @@
 package LAB3.control;
 
 import LAB3.model.DummyLocalizer;
+import LAB3.model.Localizer;
 import LAB3.view.RobotLocalizationViewer;
 
 public class Main {
@@ -16,13 +17,15 @@ public class Main {
 		 * graphics class.
 		 */
 		EstimatorInterface l = new DummyLocalizer( 4, 4, 4);
-
-		RobotLocalizationViewer viewer = new RobotLocalizationViewer(l);
+		Localizer loco = new Localizer(4,4,4);
+		loco.printTransMatrix();
+		RobotLocalizationViewer viewer = new RobotLocalizationViewer(loco);
 
 		/*
 		 * this thread controls the continuous update. If it is not started, 
 		 * you can only click through your localisation stepwise
 		 */
 		new LocalizationDriver( 500, viewer).start();
+
 	}
 }	

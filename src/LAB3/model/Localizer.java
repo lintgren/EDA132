@@ -9,7 +9,8 @@ import java.util.Random;
  */
 public class Localizer implements EstimatorInterface {
 
-    private int rows, cols, head, currX, currY;
+    private int rows, cols, head, currX, currY, currHead;
+    private static final int NORTH = 0,EAST=1, SOUTH = 2, WEST = 3;
     private double transitionProb[][];
     private double emissionProb[][];
 
@@ -26,24 +27,58 @@ public class Localizer implements EstimatorInterface {
 
 
     public void setRandomPosition(){
-        Random ran = new Random(cols*rows);
-        currX = ran.nextInt()%cols;
-        currY = ran.nextInt()/rows;
+        Random ran = new Random();
+        currX = ran.nextInt(cols*rows)%cols;
+        currY = ran.nextInt(cols*rows)/rows;
+        currHead = ran.nextInt(4);
+        System.out.println(currX);
+        System.out.println(currY);
+    }
+
+    private void moveRobot(){
+        while(true) {
+            try {
+                switch (currHead) {
+                    case NORTH:
+                        currY -= 1;
+                        double temp = transitionProb[currX][currY];
+                        break;
+                    case EAST:
+                        currX += 1;
+                        temp = transitionProb[currX][currY];
+                        break;
+                    case SOUTH:
+                        currY += 1;
+                        temp = transitionProb[currX][currY];
+                        break;
+                    case WEST:
+                        currX -= 1;
+                        temp = transitionProb[currX][currY];
+                        break;
+                }
+                break;
+            }
+            catch(ArrayIndexOutOfBoundsException e){
+                Random ran = new Random();
+                currHead = ran.nextInt(3);
+            }
+        }
+
     }
 
     private void updateTransMatrix(){
 
 
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++) {
-                if((currX-x)>0 && (currX+x)<cols &&(currY-y)>0&&(currY-y)<rows) {
+        for (int y = 0; y < 5; y++) {
+            for (int x = 0; x < 5; x++) {
+                if((currX - 2 + x)>=0 && (currX - 2 + x)<cols &&(currY - 2 + y)>=0&&(currY - 2 + y)<rows) {
                     transitionProb[currX - 2 + x][currY - 2 + y] = 0.025;
                 }
             }
         }
             for (int y = 0; y < 3; y++) {
                 for (int x = 0; x < 3; x++) {
-                    if((currX-x)>0 && (currX+x)<cols &&(currY-y)>0&&(currY-y)<rows) {
+                    if((currX - 1 + x)>=0 && (currX - 1 + x)<cols &&(currY - 1 + y)>=0&&(currY - 1 + y)<rows) {
                         transitionProb[currX - 1 + x][currY - 1 + y] = 0.05;
                     }
                 }
@@ -51,6 +86,15 @@ public class Localizer implements EstimatorInterface {
         transitionProb[currX][currY] = 0.1;
 
 
+
+    }
+    public void printTransMatrix(){
+        for (int y = 0; y<rows; y++) {
+            System.out.println("");
+            for (int x = 0;x<cols;x++) {
+                System.out.print(String.format("%.3f",transitionProb[x][y])+"\t");
+            }
+        }
     }
 
     @Override
@@ -70,7 +114,8 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public void update() {
-
+        moveRobot();
+    updateTransMatrix();
     }
 
     @Override
@@ -86,12 +131,12 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public double getCurrentProb(int x, int y) {
-        return 0;
+        return emissionProb[x][y];
     }
 
     @Override
     public double getOrXY(int rX, int rY, int x, int y) {
-        return 0;
+        return emissionProb[x][y];
     }
 
     @Override
