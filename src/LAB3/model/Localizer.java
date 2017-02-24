@@ -21,18 +21,44 @@ public class Localizer implements EstimatorInterface {
         transitionProb = new double[rows][cols];
         emissionProb = new double[rows][cols];
         setRandomPosition();
+        initFilterProbs(rows,cols);
         update();
 
     }
 
+    private void initFilterProbs(int rows, int cols) {
+        double probability = 1.0 / (rows * cols);
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                emissionProb[x][y] = probability;
+            }
+        }
+    }
 
-    public void setRandomPosition(){
+    private void setRandomPosition(){
         Random ran = new Random();
         currX = ran.nextInt(cols*rows)%cols;
         currY = ran.nextInt(cols*rows)/rows;
         currHead = ran.nextInt(4);
         System.out.println(currX);
         System.out.println(currY);
+    }
+
+    private int[] findHighestProb(){
+        double highestProb = Double.MIN_VALUE;
+        int indexX=0, indexY=0;
+        for (int y = 0; y<rows; y++) {
+            for (int x = 0;x<cols;x++) {
+                if(emissionProb[x][y]>highestProb){
+                    highestProb = emissionProb[x][y];
+                    indexY = y;
+                    indexX = x;
+                }
+
+            }
+        }
+        int[] index = {indexX,indexY};
+        return index;
     }
 
     private void moveRobot(){
@@ -126,21 +152,68 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public int[] getCurrentReading() {
-        return new int[0];
+
     }
 
     @Override
     public double getCurrentProb(int x, int y) {
+        System.out.println(emissionProb[x][y]);
         return emissionProb[x][y];
     }
 
     @Override
     public double getOrXY(int rX, int rY, int x, int y) {
-        return emissionProb[x][y];
+        if(x==rX && y==rY){
+            return 0.1;
+        }
+        else if(Math.abs(x-rX)<2 && Math.abs(y-rY)<2){
+            return 0.05;
+        }
+        else if(Math.abs(x-rX)<3 && Math.abs(y-rY)<3){
+            return 0.025;
+        }
+        return 0;
     }
 
     @Override
     public double getTProb(int x, int y, int h, int nX, int nY, int nH) {
-        return 0;
+        /*Om det inte är en vägg åt det hållet ge det en prob av 0.3
+				om riktningen är samma + 0.4*/
+        int dx = nY-y;
+        int dy = nX-x;
+        if(dx ==0 && dy==1){
+			/*
+			South
+			 */
+            if(h == SOUTH &&nH == SOUTH)
+                return 0.7;
+            else if (nH == SOUTH)
+                return 0.3;
+        }else if(dx == 0 && dy ==-1){
+			/*
+			North
+			 */
+            if(h == NORTH&&nH == NORTH)
+                return 0.7;
+            else if (nH == NORTH)
+                return 0.3;
+        }else if(dx==1 && dy==0){
+			/*
+			EAST
+			 */
+            if(h==EAST && nH == EAST)
+                return 0.7;
+            else if (nH == EAST)
+                return 0.3;
+        }else if(dx == -1 && dy == 0){
+			/*
+			WEST
+			 */
+            if(h==WEST && nH == WEST)
+                return 0.7;
+            else if (nH == WEST)
+                return 0.3;
+        }
+        return 0.0;
     }
 }
