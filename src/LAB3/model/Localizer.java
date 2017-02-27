@@ -26,7 +26,7 @@ public class Localizer implements EstimatorInterface {
         setRandomPosition();
         initFilterProbs(rows,cols);
         initTransitionMatrix();
-        //printTransitionMat();
+        printTransitionMat();
         update();
 
     }
@@ -36,7 +36,6 @@ public class Localizer implements EstimatorInterface {
             for (int y = 0; y < cols*rows*head; y++) {
                 for (int header = 0; header < head; header++) {
                     transisitionStateMatrix[rows][cols] = getTProb(0, 0, 2, x, y, header);
-                    System.out.println(getTProb(0, 0, 2, x, y, header));
                 }
             }
         }
@@ -45,8 +44,9 @@ public class Localizer implements EstimatorInterface {
     private void printTransitionMat() {
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
-                System.out.println(transisitionStateMatrix[x][y]);
+                System.out.print(transisitionStateMatrix[x][y]+" ");
             }
+            System.out.println("");
         }
     }
 
