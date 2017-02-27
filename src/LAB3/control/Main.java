@@ -18,7 +18,6 @@ public class Main {
 		 */
 		EstimatorInterface l = new DummyLocalizer( 4, 4, 4);
 		Localizer loco = new Localizer(4,4,4);
-		loco.printTransMatrix();
 		RobotLocalizationViewer viewer = new RobotLocalizationViewer(loco);
 
 		/*

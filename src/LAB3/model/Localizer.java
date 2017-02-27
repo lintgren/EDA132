@@ -14,37 +14,59 @@ public class Localizer implements EstimatorInterface {
     private static final int NORTH = 0,EAST=1, SOUTH = 2, WEST = 3;
     private double transitionProb[][];
     private double emissionProb[][];
-    private double transisitionStateMatrix[][];
+    private double emissionStateMatrix[][];
+    private double transitionStateMatrix[][];
+    private double resultMatrix[][];
 
     public Localizer(int rows, int cols, int head){
         this.rows = rows;
         this.cols = cols;
         this.head = head;
         transitionProb = new double[rows][cols];
-        emissionProb = new double[rows][cols];
-        transisitionStateMatrix = new double[rows*cols*head][rows*cols*head];
+        emissionProb = new double[rows*cols*head][cols*rows*head];
+        transitionStateMatrix = new double[rows*cols*head][rows*cols*head];
+        emissionStateMatrix = new double[rows*cols*head][rows*cols*head];
+        resultMatrix = new double[rows*cols*head][rows*cols*head];
         setRandomPosition();
         initFilterProbs(rows,cols);
+        initEmissionMatrix();
         initTransitionMatrix();
-        printTransitionMat();
-        update();
+        resultMatrix = transitionStateMatrix;
 
     }
 
     private void initTransitionMatrix() {
-        for (int x = 0; x < rows*cols*head; x++) {
-            for (int y = 0; y < cols*rows*head; y++) {
-                for (int header = 0; header < head; header++) {
-                    transisitionStateMatrix[rows][cols] = getTProb(0, 0, 2, x, y, header);
-                }
+        for(int row = 0;row<cols*rows*head;row++ ){
+            for(int col = 0; col<rows*cols*head;col++){
+                   transitionStateMatrix[row][col]= getTProb(row/16,(row%16)/4,row%4,col/16,(col%16)/4,col%4);
             }
         }
     }
 
-    private void printTransitionMat() {
-        for (int x = 0; x < 16; x++) {
-            for (int y = 0; y < 16; y++) {
-                System.out.print(transisitionStateMatrix[x][y]+" ");
+    private void initEmissionMatrix() {
+
+                for (int row = 0; row < cols * rows * head; row++) {
+                    for (int col = 0; col < rows * cols * head; col++) {
+                        emissionStateMatrix[row][col] = getOrXY(currX, currY, row, col);
+                    }
+                }
+            }
+
+
+
+    private void printTransitionMat(){
+        for (int x = 0; x < cols*rows*head; x++) {
+            for (int y = 0; y < cols*rows*head; y++) {
+                System.out.print(transitionStateMatrix[x][y]+" ");
+            }
+            System.out.println("");
+        }
+    }
+
+    private void printEmissionMat() {
+        for (int x = 0; x < cols*rows*head; x++) {
+            for (int y = 0; y < cols*rows*head; y++) {
+                System.out.print(emissionProb[x][y]+" ");
             }
             System.out.println("");
         }
@@ -52,11 +74,15 @@ public class Localizer implements EstimatorInterface {
 
     private void initFilterProbs(int rows, int cols) {
         double probability = 1.0 / (rows * cols);
-        for (int y = 0; y < rows; y++) {
-            for (int x = 0; x < cols; x++) {
-                emissionProb[x][y] = probability;
-            }
+        for (int y = 0; y < rows*cols*head; y++) {
+                emissionProb[y][y] = probability;
         }
+    }
+
+    private void filter(){
+        RealMatrix transitionMat = MatrixUtils.createRealMatrix(transitionStateMatrix);
+        RealMatrix transisionTranspose = transitionMat.transpose();
+        resultMatrix = MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose.multiply(MatrixUtils.createRealMatrix(resultMatrix))).getData();
     }
 
     private void setRandomPosition(){
@@ -68,13 +94,13 @@ public class Localizer implements EstimatorInterface {
         System.out.println(currY);
     }
 
-    private int[] findHighestProb(){
+    private int[] findHighestProb(double result[][]){
         double highestProb = Double.MIN_VALUE;
         int indexX=0, indexY=0;
         for (int y = 0; y<rows; y++) {
             for (int x = 0;x<cols;x++) {
-                if(emissionProb[x][y]>highestProb){
-                    highestProb = emissionProb[x][y];
+                if(result[x][y]>highestProb){
+                    highestProb = result[x][y];
                     indexY = y;
                     indexX = x;
                 }
@@ -90,20 +116,20 @@ public class Localizer implements EstimatorInterface {
             try {
                 switch (currHead) {
                     case NORTH:
+                        double temp = transitionProb[currX][currY-1];
                         currY -= 1;
-                        double temp = transitionProb[currX][currY];
                         break;
                     case EAST:
+                        temp = transitionProb[currX+1][currY];
                         currX += 1;
-                        temp = transitionProb[currX][currY];
                         break;
                     case SOUTH:
+                        temp = transitionProb[currX][currY+1];
                         currY += 1;
-                        temp = transitionProb[currX][currY];
                         break;
                     case WEST:
+                        temp = transitionProb[currX-1][currY];
                         currX -= 1;
-                        temp = transitionProb[currX][currY];
                         break;
                 }
                 break;
@@ -116,25 +142,19 @@ public class Localizer implements EstimatorInterface {
 
     }
 
-//    private void updateEmissionMatrix(){
-//
-//
-//        for (int y = 0; y < 5; y++) {
-//            for (int x = 0; x < 5; x++) {
-//                if((currX - 2 + x)>=0 && (currX - 2 + x)<cols &&(currY - 2 + y)>=0&&(currY - 2 + y)<rows) {
-//                    transitionProb[currX - 2 + x][currY - 2 + y] = 0.025;
-//                }
-//            }
-//        }
-//            for (int y = 0; y < 3; y++) {
-//                for (int x = 0; x < 3; x++) {
-//                    if((currX - 1 + x)>=0 && (currX - 1 + x)<cols &&(currY - 1 + y)>=0&&(currY - 1 + y)<rows) {
-//                        transitionProb[currX - 1 + x][currY - 1 + y] = 0.05;
-//                    }
-//                }
-//            }
-//        transitionProb[currX][currY] = 0.1;
+    private void updateEmissionMatrix() {
+        for(int row = 0; row<rows*cols*head;row++){
+            emissionProb[row][row] = getOrXY(currX,currY,row/16,(row%16)/4);
+        }
+    }
 
+
+    public void printResultMatrix(){
+        for (int y = 0; y<rows; y++) {
+            System.out.println("");
+            for (int x = 0;x<cols;x++) {
+                System.out.print(String.format("%.3f", resultMatrix[x][y]) + "\t");
+            }}}
 
 
 
@@ -165,44 +185,26 @@ public class Localizer implements EstimatorInterface {
     @Override
     public void update() {
         moveRobot();
-
-
-//        double prob;
-//        double negProb;
-//        double[] firstTouple = new double[2];
-//        double[] secondTouple = new double[2];
-//        double[] answerTouple = new double[2];
-//
-//        for (int y = 0; y < rows; y++) {
-//            for (int x = 0; x < cols; x++) {
-//            prob = emissionProb[x][y];
-//            negProb = 1 - emissionProb[x][y];
-//            firstTouple[0] = prob;
-//            firstTouple[1] = negProb;
-//            secondTouple[0] = negProb;
-//            secondTouple[1] = prob;
-//            answerTouple[1] = firstTouple[0]*prob + secondTouple[1]
-//
-//            }
-    //updateTransMatrix();
+        updateEmissionMatrix();
+        printResultMatrix();
+        filter();
     }
 
     @Override
     public int[] getCurrentTruePosition() {
-        int[] currPos = {currX,currY};
+        int[] currPos = {currY,currX};
         return currPos;
     }
 
     @Override
     public int[] getCurrentReading() {
-
-        return new int[0];
+        int[] ret = {1,3};
+        return ret;
     }
 
     @Override
     public double getCurrentProb(int x, int y) {
-        System.out.println(emissionProb[x][y]);
-        return emissionProb[x][y];
+        return resultMatrix[x][y];
     }
 
     @Override
