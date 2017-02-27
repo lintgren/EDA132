@@ -55,18 +55,18 @@ public class Localizer implements EstimatorInterface {
 
 
     private void printTransitionMat(){
-        for (int x = 0; x < cols*rows*head; x++) {
-            for (int y = 0; y < cols*rows*head; y++) {
-                System.out.print(transitionStateMatrix[x][y]+" ");
+        for (int row = 0; row < cols*rows*head; row++) {
+            for (int col = 0; col < cols*rows*head; col++) {
+                System.out.print(transitionStateMatrix[row][col]+" ");
             }
             System.out.println("");
         }
     }
 
     private void printEmissionMat() {
-        for (int x = 0; x < cols*rows*head; x++) {
-            for (int y = 0; y < cols*rows*head; y++) {
-                System.out.print(emissionProb[x][y]+" ");
+        for (int row = 0; row < cols*rows*head; row++) {
+            for (int col = 0; col < cols*rows*head; col++) {
+                System.out.print(emissionProb[row][col]+" ");
             }
             System.out.println("");
         }
@@ -97,12 +97,12 @@ public class Localizer implements EstimatorInterface {
     private int[] findHighestProb(double result[][]){
         double highestProb = Double.MIN_VALUE;
         int indexX=0, indexY=0;
-        for (int y = 0; y<rows; y++) {
-            for (int x = 0;x<cols;x++) {
-                if(result[x][y]>highestProb){
-                    highestProb = result[x][y];
-                    indexY = y;
-                    indexX = x;
+        for (int row = 0; row<rows; row++) {
+            for (int col = 0;col<cols;col++) {
+                if(result[row][col]>highestProb){
+                    highestProb = result[row][col];
+                    indexY = col;
+                    indexX = row;
                 }
 
             }
@@ -114,29 +114,36 @@ public class Localizer implements EstimatorInterface {
     private void moveRobot(){
         while(true) {
             try {
+
                 switch (currHead) {
+
                     case NORTH:
                         double temp = transitionProb[currX][currY-1];
                         currY -= 1;
+                        System.out.println(currX + " " + currY + " "+ currHead);
                         break;
                     case EAST:
                         temp = transitionProb[currX+1][currY];
                         currX += 1;
+                        System.out.println(currX + " " + currY + " "+ currHead);
                         break;
                     case SOUTH:
                         temp = transitionProb[currX][currY+1];
                         currY += 1;
+                        System.out.println(currX + " " + currY + " "+ currHead);
                         break;
                     case WEST:
                         temp = transitionProb[currX-1][currY];
                         currX -= 1;
+                        System.out.println(currX + " " + currY + " "+ currHead);
                         break;
                 }
                 break;
             }
             catch(ArrayIndexOutOfBoundsException e){
                 Random ran = new Random();
-                currHead = ran.nextInt(3);
+                currHead = ran.nextInt(4);
+                System.out.println(currX + " " + currY);
             }
         }
 
@@ -150,19 +157,19 @@ public class Localizer implements EstimatorInterface {
 
 
     public void printResultMatrix(){
-        for (int y = 0; y<rows; y++) {
+        for (int row = 0; row<rows; row++) {
             System.out.println("");
-            for (int x = 0;x<cols;x++) {
-                System.out.print(String.format("%.3f", resultMatrix[x][y]) + "\t");
+            for (int col = 0;col<cols;col++) {
+                System.out.print(String.format("%.3f", resultMatrix[row][col]) + "\t");
             }}}
 
 
 
     public void printTransMatrix(){
-        for (int y = 0; y<rows; y++) {
+        for (int row = 0; row<rows; row++) {
             System.out.println("");
-            for (int x = 0;x<cols;x++) {
-                System.out.print(String.format("%.3f",transitionProb[x][y])+"\t");
+            for (int col = 0;col<cols;col++) {
+                System.out.print(String.format("%.3f",transitionProb[row][col])+"\t");
             }
         }
     }
@@ -186,7 +193,7 @@ public class Localizer implements EstimatorInterface {
     public void update() {
         moveRobot();
         updateEmissionMatrix();
-        printResultMatrix();
+        //printResultMatrix();
         filter();
     }
 
