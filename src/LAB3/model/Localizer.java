@@ -1,6 +1,8 @@
 package LAB3.model;
 
 import LAB3.control.EstimatorInterface;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.Random;
 
@@ -8,11 +10,11 @@ import java.util.Random;
  * Created by Erik on 2017-02-22.
  */
 public class Localizer implements EstimatorInterface {
-
     private int rows, cols, head, currX, currY, currHead;
     private static final int NORTH = 0,EAST=1, SOUTH = 2, WEST = 3;
     private double transitionProb[][];
     private double emissionProb[][];
+    private double transisitionStateMatrix[][];
 
     public Localizer(int rows, int cols, int head){
         this.rows = rows;
@@ -20,10 +22,32 @@ public class Localizer implements EstimatorInterface {
         this.head = head;
         transitionProb = new double[rows][cols];
         emissionProb = new double[rows][cols];
+        transisitionStateMatrix = new double[rows*cols*head][rows*cols*head];
         setRandomPosition();
         initFilterProbs(rows,cols);
+        initTransitionMatrix();
+        //printTransitionMat();
         update();
 
+    }
+
+    private void initTransitionMatrix() {
+        for (int x = 0; x < rows*cols*head; x++) {
+            for (int y = 0; y < cols*rows*head; y++) {
+                for (int header = 0; header < head; header++) {
+                    transisitionStateMatrix[rows][cols] = getTProb(0, 0, 2, x, y, header);
+                    System.out.println(getTProb(0, 0, 2, x, y, header));
+                }
+            }
+        }
+    }
+
+    private void printTransitionMat() {
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                System.out.println(transisitionStateMatrix[x][y]);
+            }
+        }
     }
 
     private void initFilterProbs(int rows, int cols) {
@@ -92,28 +116,28 @@ public class Localizer implements EstimatorInterface {
 
     }
 
-    private void updateTransMatrix(){
+//    private void updateEmissionMatrix(){
+//
+//
+//        for (int y = 0; y < 5; y++) {
+//            for (int x = 0; x < 5; x++) {
+//                if((currX - 2 + x)>=0 && (currX - 2 + x)<cols &&(currY - 2 + y)>=0&&(currY - 2 + y)<rows) {
+//                    transitionProb[currX - 2 + x][currY - 2 + y] = 0.025;
+//                }
+//            }
+//        }
+//            for (int y = 0; y < 3; y++) {
+//                for (int x = 0; x < 3; x++) {
+//                    if((currX - 1 + x)>=0 && (currX - 1 + x)<cols &&(currY - 1 + y)>=0&&(currY - 1 + y)<rows) {
+//                        transitionProb[currX - 1 + x][currY - 1 + y] = 0.05;
+//                    }
+//                }
+//            }
+//        transitionProb[currX][currY] = 0.1;
 
 
-        for (int y = 0; y < 5; y++) {
-            for (int x = 0; x < 5; x++) {
-                if((currX - 2 + x)>=0 && (currX - 2 + x)<cols &&(currY - 2 + y)>=0&&(currY - 2 + y)<rows) {
-                    transitionProb[currX - 2 + x][currY - 2 + y] = 0.025;
-                }
-            }
-        }
-            for (int y = 0; y < 3; y++) {
-                for (int x = 0; x < 3; x++) {
-                    if((currX - 1 + x)>=0 && (currX - 1 + x)<cols &&(currY - 1 + y)>=0&&(currY - 1 + y)<rows) {
-                        transitionProb[currX - 1 + x][currY - 1 + y] = 0.05;
-                    }
-                }
-            }
-        transitionProb[currX][currY] = 0.1;
 
 
-
-    }
     public void printTransMatrix(){
         for (int y = 0; y<rows; y++) {
             System.out.println("");
@@ -141,7 +165,26 @@ public class Localizer implements EstimatorInterface {
     @Override
     public void update() {
         moveRobot();
-    updateTransMatrix();
+
+
+//        double prob;
+//        double negProb;
+//        double[] firstTouple = new double[2];
+//        double[] secondTouple = new double[2];
+//        double[] answerTouple = new double[2];
+//
+//        for (int y = 0; y < rows; y++) {
+//            for (int x = 0; x < cols; x++) {
+//            prob = emissionProb[x][y];
+//            negProb = 1 - emissionProb[x][y];
+//            firstTouple[0] = prob;
+//            firstTouple[1] = negProb;
+//            secondTouple[0] = negProb;
+//            secondTouple[1] = prob;
+//            answerTouple[1] = firstTouple[0]*prob + secondTouple[1]
+//
+//            }
+    //updateTransMatrix();
     }
 
     @Override
@@ -153,6 +196,7 @@ public class Localizer implements EstimatorInterface {
     @Override
     public int[] getCurrentReading() {
 
+        return new int[0];
     }
 
     @Override
