@@ -4,6 +4,7 @@ import LAB3.control.EstimatorInterface;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import javax.rmi.CORBA.Util;
 import java.util.Random;
 
 /**
@@ -28,11 +29,10 @@ public class Localizer implements EstimatorInterface {
         emissionStateMatrix = new double[rows*cols*head][rows*cols*head];
         resultMatrix = new double[rows*cols*head][rows*cols*head];
         setRandomPosition();
-        initFilterProbs(rows,cols);
-        initEmissionMatrix();
+//        initFilterProbs(rows,cols);
+        //initEmissionMatrix();
         initTransitionMatrix();
-        resultMatrix = transitionStateMatrix;
-
+        initResultMatrix(rows,cols);
     }
 
     private void initTransitionMatrix() {
@@ -52,12 +52,19 @@ public class Localizer implements EstimatorInterface {
                 }
             }
 
-
-
     private void printTransitionMat(){
         for (int row = 0; row < cols*rows*head; row++) {
             for (int col = 0; col < cols*rows*head; col++) {
                 System.out.print(transitionStateMatrix[row][col]+" ");
+            }
+            System.out.println("");
+        }
+    }
+
+    private void printResultMat(){
+        for (int row = 0; row < cols*rows*head; row++) {
+            for (int col = 0; col < cols*rows*head; col++) {
+                System.out.print(resultMatrix[row][col]+" ");
             }
             System.out.println("");
         }
@@ -72,6 +79,13 @@ public class Localizer implements EstimatorInterface {
         }
     }
 
+    private void initResultMatrix(int rows, int cols) {
+        double probability = 1.0 / (rows * cols * head);
+        for (int y = 0; y < rows*cols*head; y++) {
+            resultMatrix[y][y] = probability;
+        }
+    }
+
     private void initFilterProbs(int rows, int cols) {
         double probability = 1.0 / (rows * cols);
         for (int y = 0; y < rows*cols*head; y++) {
@@ -82,7 +96,10 @@ public class Localizer implements EstimatorInterface {
     private void filter(){
         RealMatrix transitionMat = MatrixUtils.createRealMatrix(transitionStateMatrix);
         RealMatrix transisionTranspose = transitionMat.transpose();
-        resultMatrix = MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose.multiply(MatrixUtils.createRealMatrix(resultMatrix))).getData();
+        RealMatrix obsTrans = MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose);
+        resultMatrix = obsTrans.multiply(MatrixUtils.createRealMatrix(resultMatrix)).getData();
+        resultMatrix = MatrixUtils.createRealMatrix(resultMatrix).scalarMultiply(norm()).getData();
+        //resultMatrix = (MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose.multiply(MatrixUtils.createRealMatrix(resultMatrix)))).getData();
     }
 
     private void setRandomPosition(){
@@ -112,67 +129,90 @@ public class Localizer implements EstimatorInterface {
     }
 
     private void moveRobot(){
-        while(true) {
-            try {
-
-                switch (currHead) {
-
-                    case NORTH:
-                        double temp = transitionProb[currX][currY-1];
-                        currY -= 1;
-                        System.out.println(currX + " " + currY + " "+ currHead);
-                        break;
-                    case EAST:
-                        temp = transitionProb[currX+1][currY];
-                        currX += 1;
-                        System.out.println(currX + " " + currY + " "+ currHead);
-                        break;
-                    case SOUTH:
-                        temp = transitionProb[currX][currY+1];
-                        currY += 1;
-                        System.out.println(currX + " " + currY + " "+ currHead);
-                        break;
-                    case WEST:
-                        temp = transitionProb[currX-1][currY];
-                        currX -= 1;
-                        System.out.println(currX + " " + currY + " "+ currHead);
-                        break;
+        Random ran = new Random();
+        double ranValue = ran.nextDouble();
+        if(ranValue<=0.7) {
+            while (true) {
+                try {
+                    switch (currHead) {
+                        case NORTH:
+                            double temp = transitionProb[currX][currY - 1];
+                            currY -= 1;
+                            break;
+                        case EAST:
+                            temp = transitionProb[currX + 1][currY];
+                            currX += 1;
+                            break;
+                        case SOUTH:
+                            temp = transitionProb[currX][currY + 1];
+                            currY += 1;
+                            break;
+                        case WEST:
+                            temp = transitionProb[currX - 1][currY];
+                            currX -= 1;
+                            break;
+                    }
+                    break;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    currHead = ran.nextInt(4);
                 }
-                break;
             }
-            catch(ArrayIndexOutOfBoundsException e){
-                Random ran = new Random();
-                currHead = ran.nextInt(4);
-                System.out.println(currX + " " + currY);
+        }
+        else{
+            while (true) {
+                try {
+                    int oldHead = currHead;
+                    ranValue = ran.nextDouble();
+                    currHead = ran.nextInt(4);
+                    while(currHead==oldHead){
+                        currHead=ran.nextInt(4);
+                    }
+                    switch (currHead) {
+                        case NORTH:
+                            double temp = transitionProb[currX][currY - 1];
+                            currY -= 1;
+                            break;
+                        case EAST:
+                            temp = transitionProb[currX + 1][currY];
+                            currX += 1;
+                            break;
+                        case SOUTH:
+                            temp = transitionProb[currX][currY + 1];
+                            currY += 1;
+                            break;
+                        case WEST:
+                            temp = transitionProb[currX - 1][currY];
+                            currX -= 1;
+                            break;
+                    }
+                    break;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    currHead = ran.nextInt(4);
+                }
             }
         }
 
     }
 
     private void updateEmissionMatrix() {
-        for(int row = 0; row<rows*cols*head;row++){
-            emissionProb[row][row] = getOrXY(currX,currY,row/16,(row%16)/4);
+        for(int row = 0; row<rows*cols*head;row++) {
+            emissionProb[row][row] = getOrXY(currX, currY, row / 16, (row % 16) / 4);
         }
-    }
-
-
-    public void printResultMatrix(){
-        for (int row = 0; row<rows; row++) {
-            System.out.println("");
-            for (int col = 0;col<cols;col++) {
-                System.out.print(String.format("%.3f", resultMatrix[row][col]) + "\t");
-            }}}
-
-
-
-    public void printTransMatrix(){
-        for (int row = 0; row<rows; row++) {
-            System.out.println("");
-            for (int col = 0;col<cols;col++) {
-                System.out.print(String.format("%.3f",transitionProb[row][col])+"\t");
+        /*
+        for (int row = 0; row < cols * rows * head; row++) {
+            for (int col = 0; col < rows * cols * head; col++) {
+                emissionStateMatrix[row][col] = getOrXY(currX, currY, row, col);
             }
         }
+        */
     }
+
+    public void printResultMatrix(){
+        for (int row = 0; row<rows*cols*head; row++) {
+            System.out.println("");
+            for (int col = 0;col<cols*rows*head;col++) {
+                System.out.print(String.format("%.3f", resultMatrix[row][col]) + "\t");
+            }}}
 
     @Override
     public int getNumRows() {
@@ -189,11 +229,20 @@ public class Localizer implements EstimatorInterface {
         return head;
     }
 
+    private double norm(){
+        double sum = 0.0;
+        for(int x = 0;x<rows;x++){
+            for(int y = 0; y<cols;y++){
+                sum += getCurrentProb(x,y);
+            }
+        }
+        return 1/sum;
+    }
+
     @Override
     public void update() {
         moveRobot();
         updateEmissionMatrix();
-        //printResultMatrix();
         filter();
     }
 
@@ -205,13 +254,20 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public int[] getCurrentReading() {
-        int[] ret = {1,3};
+        int[] ret = getCurrentTruePosition();
         return ret;
     }
 
     @Override
     public double getCurrentProb(int x, int y) {
-        return resultMatrix[x][y];
+        int rowIndex = x*16+y*4;
+        double sum = 0.0;
+        for (int row = rowIndex; row<rowIndex+4; row++){
+            for(int col = 0; col<rows*cols*head; col++){
+                sum += resultMatrix[row][col];
+            }
+        }
+        return sum;
     }
 
     @Override
@@ -230,42 +286,54 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public double getTProb(int x, int y, int h, int nX, int nY, int nH) {
-        /*Om det inte är en vägg åt det hållet ge det en prob av 0.3
-				om riktningen är samma + 0.4*/
         int dx = nY-y;
         int dy = nX-x;
+        double ways = 4;
+        double prob =1.0;
+        if(x==0 || x==rows-1)
+            ways -=1;
+        if(y==0||y == cols-1)
+            ways -=1;
+        if(!((h==NORTH && x-1<0)||(h==EAST && y==rows-1)||(h==SOUTH&& x==cols-1)||(h==WEST && y-1<0))){
+            prob-=0.7;
+            ways-=1;
+        }
         if(dx ==0 && dy==1){
 			/*
 			South
 			 */
             if(h == SOUTH &&nH == SOUTH)
                 return 0.7;
-            else if (nH == SOUTH)
-                return 0.3;
+            else if (nH == SOUTH) {
+                return prob/ways;
+            }
         }else if(dx == 0 && dy ==-1){
 			/*
 			North
 			 */
             if(h == NORTH&&nH == NORTH)
                 return 0.7;
-            else if (nH == NORTH)
-                return 0.3;
+            else if (nH == NORTH) {
+                return prob/ways;
+            }
         }else if(dx==1 && dy==0){
 			/*
 			EAST
 			 */
             if(h==EAST && nH == EAST)
                 return 0.7;
-            else if (nH == EAST)
-                return 0.3;
+            else if (nH == EAST){
+                return prob/ways;
+            }
         }else if(dx == -1 && dy == 0){
 			/*
 			WEST
 			 */
             if(h==WEST && nH == WEST)
                 return 0.7;
-            else if (nH == WEST)
-                return 0.3;
+            else if (nH == WEST){
+                return prob/ways;
+            }
         }
         return 0.0;
     }
