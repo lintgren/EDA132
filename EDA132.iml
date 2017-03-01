@@ -38,5 +38,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="commons-net-3.6" level="application" />
+    <orderEntry type="library" name="commons-net-3.6-sources" level="application" />
+    <orderEntry type="library" name="commons-math3-3.6.1" level="application" />
   </component>
 </module>

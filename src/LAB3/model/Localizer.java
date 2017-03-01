@@ -3,8 +3,6 @@ package LAB3.model;
 import LAB3.control.EstimatorInterface;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-
-import javax.rmi.CORBA.Util;
 import java.util.Random;
 
 /**
@@ -13,13 +11,17 @@ import java.util.Random;
 public class Localizer implements EstimatorInterface {
     private int rows, cols, head, currX, currY, currHead;
     private static final int NORTH = 0,EAST=1, SOUTH = 2, WEST = 3;
+    private Integer[] currReading = {-1,-1};
     private double transitionProb[][];
     private double emissionProb[][];
     private double emissionStateMatrix[][];
     private double transitionStateMatrix[][];
     private double resultMatrix[][];
+    private DistributedRandomNumberGenerator drng;
+
 
     public Localizer(int rows, int cols, int head){
+        drng = new DistributedRandomNumberGenerator();
         this.rows = rows;
         this.cols = cols;
         this.head = head;
@@ -195,8 +197,49 @@ public class Localizer implements EstimatorInterface {
     }
 
     private void updateEmissionMatrix() {
+        /*
+            Prob: 0.025, 0.05, 0.1, Nothing
+            TODO: slumpa en punkt, ska bara den punkten ligga i emission???
+         */
+
+        //drng.emptiee();
+        /*System.out.println("currX: ");
+        System.out.print(currX);
+        System.out.println("currY: ");
+        System.out.print(currY);
+        */
+        /*
+        emissionProb= new double[rows*cols*head][rows*cols*head];
+        for(int row = 0;row<rows;row++) {
+            for (int column = 0; column < cols; column++) {
+                double prob = getOrXY(currX,currY,column,row);
+                if(prob==0.025||prob==0.05||prob==0.1){
+                    drng.addNumber(column*rows+row,prob);
+                }else {
+                    //System.out.println(getOrXY(-1,-1,currX,currY));
+                    drng.addNumber(column*rows+row,getOrXY(-1,-1,currX,currY));
+                }
+            }
+        }
+        int coord = drng.getDistributedRandomNumber();
+        if(coord != -1){
+            System.out.println(coord);
+            for(int x =0;x<rows;x++) {
+                //System.out.println(getOrXY(currX,currY,coord*rows,coord*rows));
+                    emissionProb[coord*cols*rows+x][coord*cols*rows+x] = getOrXY(currX,currY,coord*rows,coord%cols);
+            }
+        }
+        printEmissionMat();
+        currReading[0] = coord/rows;
+        currReading[1] = coord%cols;
+        */
+
         for(int row = 0; row<rows*cols*head;row++) {
-            emissionProb[row][row] = getOrXY(currX, currY, row / 16, (row % 16) / 4);
+            double prob = getOrXY(currX, currY, row / 16, (row % 16) / 4);
+            //if(prob==0.025||prob==0.05||prob==0.1)
+                emissionProb[row][row] = prob;//getOrXY(currX, currY, row / 16, (row % 16) / 4);
+           // else
+             //   emissionProb[row][row] = getOrXY(-1, -1,currX,currY);
         }
         /*
         for (int row = 0; row < cols * rows * head; row++) {
@@ -254,8 +297,10 @@ public class Localizer implements EstimatorInterface {
 
     @Override
     public int[] getCurrentReading() {
-        int[] ret = getCurrentTruePosition();
-        return ret;
+        int[] i =new int[2];
+        i[0] = currReading[0];
+        i[1] = currReading[1];
+        return i;
     }
 
     @Override
@@ -280,6 +325,25 @@ public class Localizer implements EstimatorInterface {
         }
         else if(Math.abs(x-rX)<3 && Math.abs(y-rY)<3){
             return 0.025;
+        }else if(rX ==1 || rY ==-1){
+            double sum = 0;
+            int nbrOfNothing =0;
+            for(int row = 0;row<rows;row++){
+                for(int column = 0; column<cols;column++){
+                    if(x==row && y==column){
+                        sum+=0.1;
+                    }
+                    else if(Math.abs(x-row)<2 && Math.abs(y-column)<2){
+                        sum +=0.05;
+                    }
+                    else if(Math.abs(x-row)<3 && Math.abs(y-column)<3){
+                        sum +=0.025;
+                    }else{
+                        nbrOfNothing+=1;
+                    }
+                }
+            }
+            return (1-sum)/nbrOfNothing;
         }
         return 0;
     }
