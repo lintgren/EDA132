@@ -100,7 +100,8 @@ public class Localizer implements EstimatorInterface {
         RealMatrix transisionTranspose = transitionMat.transpose();
         RealMatrix obsTrans = MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose);
         resultMatrix = obsTrans.multiply(MatrixUtils.createRealMatrix(resultMatrix)).getData();
-        resultMatrix = MatrixUtils.createRealMatrix(resultMatrix).scalarMultiply(norm()).getData();
+        if(norm()!=0)
+            resultMatrix = MatrixUtils.createRealMatrix(resultMatrix).scalarMultiply(norm()).getData();
         //resultMatrix = (MatrixUtils.createRealMatrix(emissionProb).multiply(transisionTranspose.multiply(MatrixUtils.createRealMatrix(resultMatrix)))).getData();
     }
 
@@ -201,39 +202,57 @@ public class Localizer implements EstimatorInterface {
             Prob: 0.025, 0.05, 0.1, Nothing
             TODO: slumpa en punkt, ska bara den punkten ligga i emission???
          */
-
-        //drng.emptiee();
+        drng.emptiee();
+        emissionProb = new double[rows*cols*head][rows*cols*head];
         /*System.out.println("currX: ");
         System.out.print(currX);
         System.out.println("currY: ");
         System.out.print(currY);
         */
-        /*
+
         emissionProb= new double[rows*cols*head][rows*cols*head];
         for(int row = 0;row<rows;row++) {
             for (int column = 0; column < cols; column++) {
-                double prob = getOrXY(currX,currY,column,row);
+                double prob = getOrXY(currX,currY,row,column);
                 if(prob==0.025||prob==0.05||prob==0.1){
                     drng.addNumber(column*rows+row,prob);
                 }else {
                     //System.out.println(getOrXY(-1,-1,currX,currY));
-                    drng.addNumber(column*rows+row,getOrXY(-1,-1,currX,currY));
+                    drng.addNumber(-1,getOrXY(-1,-1,currX,currY));
                 }
             }
         }
         int coord = drng.getDistributedRandomNumber();
         if(coord != -1){
-            System.out.println(coord);
-            for(int x =0;x<rows;x++) {
+            for(int row = 0; row<rows*cols*head;row++) {
+                double prob = getOrXY(coord/rows,coord%cols, row / 16, (row % 16) / 4);
+                //if(prob==0.025||prob==0.05||prob==0.1)
+                emissionProb[row][row] = prob;//getOrXY(currX, currY, row / 16, (row % 16) / 4);
+                // else
+                //   emissionProb[row][row] = getOrXY(-1, -1,currX,currY);
+            }
+            /*for(int x =0;x<rows;x++) {
                 //System.out.println(getOrXY(currX,currY,coord*rows,coord*rows));
                     emissionProb[coord*cols*rows+x][coord*cols*rows+x] = getOrXY(currX,currY,coord*rows,coord%cols);
-            }
+            }*/
         }
-        printEmissionMat();
+        else{
+            double prob = 0.0833;
+            for(int i = 0;i <20;i++){
+                emissionProb[i][i] = prob;
+                emissionProb[44+i][44+i] = prob;
+            }
+            for(int i = 0; i< 4;i++){
+                emissionProb[28+i][28+i] =prob;
+                emissionProb[32+i][32+i] =prob;
+
+            }
+            int k= 0;
+        }
         currReading[0] = coord/rows;
         currReading[1] = coord%cols;
-        */
 
+/*
         for(int row = 0; row<rows*cols*head;row++) {
             double prob = getOrXY(currX, currY, row / 16, (row % 16) / 4);
             //if(prob==0.025||prob==0.05||prob==0.1)
@@ -279,7 +298,10 @@ public class Localizer implements EstimatorInterface {
                 sum += getCurrentProb(x,y);
             }
         }
+        if(sum>0)
         return 1/sum;
+        else
+            return 0;
     }
 
     @Override
@@ -298,6 +320,9 @@ public class Localizer implements EstimatorInterface {
     @Override
     public int[] getCurrentReading() {
         int[] i =new int[2];
+        if(i[0]==-1||i[1]==-1){
+            return null;
+        }
         i[0] = currReading[0];
         i[1] = currReading[1];
         return i;

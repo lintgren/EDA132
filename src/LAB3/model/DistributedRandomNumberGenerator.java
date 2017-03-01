@@ -20,6 +20,7 @@ public class DistributedRandomNumberGenerator {
     }
 
     public void emptiee(){
+        distSum=0;
         distribution.clear();
     }
 
