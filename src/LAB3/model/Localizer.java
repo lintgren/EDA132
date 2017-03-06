@@ -4,6 +4,7 @@ import LAB3.control.EstimatorInterface;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import java.util.Random;
+import LAB3.model.DistributedRandomNumberGenerator;
 
 /**
  * Created by Erik on 2017-02-22.
@@ -202,9 +203,8 @@ public class Localizer implements EstimatorInterface {
     private void updateEmissionMatrix() {
         /*
             Prob: 0.025, 0.05, 0.1, Nothing
-            TODO: slumpa en punkt, ska bara den punkten ligga i emission???
          */
-        drng.emptiee();
+        drng.clear();
         emissionProb = new double[rows*cols*head][rows*cols*head];
         /*System.out.println("currX: ");
         System.out.print(currX);
@@ -228,17 +228,15 @@ public class Localizer implements EstimatorInterface {
         if(coord != -1){
             for(int row = 0; row<rows*cols*head;row++) {
                 double prob = getOrXY(coord/rows,coord%cols, row / 16, (row % 16) / 4);
-                //if(prob==0.025||prob==0.05||prob==0.1)
                 emissionProb[row][row] = prob;//getOrXY(currX, currY, row / 16, (row % 16) / 4);
                 // else
                 //   emissionProb[row][row] = getOrXY(-1, -1,currX,currY);
             }
-            /*for(int x =0;x<rows;x++) {
-                //System.out.println(getOrXY(currX,currY,coord*rows,coord*rows));
-                    emissionProb[coord*cols*rows+x][coord*cols*rows+x] = getOrXY(currX,currY,coord*rows,coord%cols);
-            }*/
         }
         else{
+            /*
+            Lägger in sannolikheten för nothing.s
+             */
             double prob = 0.0833;
             for(int i = 0;i <20;i++){
                 emissionProb[i][i] = prob;
@@ -253,22 +251,6 @@ public class Localizer implements EstimatorInterface {
         }
         currReading[0] = coord/rows;
         currReading[1] = coord%cols;
-
-/*
-        for(int row = 0; row<rows*cols*head;row++) {
-            double prob = getOrXY(currX, currY, row / 16, (row % 16) / 4);
-            //if(prob==0.025||prob==0.05||prob==0.1)
-                emissionProb[row][row] = prob;//getOrXY(currX, currY, row / 16, (row % 16) / 4);
-           // else
-             //   emissionProb[row][row] = getOrXY(-1, -1,currX,currY);
-        }
-        /*
-        for (int row = 0; row < cols * rows * head; row++) {
-            for (int col = 0; col < rows * cols * head; col++) {
-                emissionStateMatrix[row][col] = getOrXY(currX, currY, row, col);
-            }
-        }
-        */
     }
 
     public void printResultMatrix(){
