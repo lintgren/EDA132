@@ -18,6 +18,8 @@ public class Localizer implements EstimatorInterface {
     private double transitionStateMatrix[][];
     private double resultMatrix[][];
     private double compareMatrix[][];
+    private double totalSum;
+    private double iterationCounter;
     private DistributedRandomNumberGenerator drng;
 
 
@@ -129,7 +131,7 @@ public class Localizer implements EstimatorInterface {
 
             }
         }
-        int[] index = {indexX,indexY};
+        int[] index = {indexY,indexX};
         return index;
     }
 
@@ -304,10 +306,16 @@ public class Localizer implements EstimatorInterface {
         int[] pos = findHighestProb(compareMatrix);
         int dx = Math.abs(pos[0]-currX);
         int dy = Math.abs(pos[1]-currY);
+        totalSum += (double)(dx+dy);
+        iterationCounter++;
+
 
         System.out.println("Current manhattan distance between robot and estimation is:" + dx +" " + dy);
         System.out.println("Estimated (x,y) coordinates: " +pos[0] + " " + pos[1]);
         System.out.println("True coordinates (x,y): " +currX + " " + currY);
+        System.out.println(totalSum/iterationCounter);
+        System.out.println(totalSum);
+        System.out.println("Current iteration: " + iterationCounter);
     }
 
     @Override
