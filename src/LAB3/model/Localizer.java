@@ -4,7 +4,6 @@ import LAB3.control.EstimatorInterface;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import java.util.Random;
-import LAB3.model.DistributedRandomNumberGenerator;
 
 /**
  * Created by Erik on 2017-02-22.
@@ -225,6 +224,9 @@ public class Localizer implements EstimatorInterface {
             }
         }
         int coord = drng.getDistributedRandomNumber();
+        /*
+        Coord is current sensorReading.
+         */
         if(coord != -1){
             for(int row = 0; row<rows*cols*head;row++) {
                 double prob = getOrXY(coord/rows,coord%cols, row / 16, (row % 16) / 4);
@@ -248,6 +250,7 @@ public class Localizer implements EstimatorInterface {
 
             }
             int k= 0;
+
         }
         currReading[0] = coord/rows;
         currReading[1] = coord%cols;
@@ -346,7 +349,7 @@ public class Localizer implements EstimatorInterface {
         }
         else if(Math.abs(x-rX)<3 && Math.abs(y-rY)<3){
             return 0.025;
-        }else if(rX ==1 || rY ==-1){
+        }else if(rX == -1 || rY ==-1){
             double sum = 0;
             int nbrOfNothing =0;
             for(int row = 0;row<rows;row++){

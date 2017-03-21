@@ -12,7 +12,6 @@ public class MiniMax {
     private long time;
     private long startTime;
 
-    //TODO: pruning, skicka med bästa värdet och jämföra med det??
     public boolean miniMaxAIMove(int value){
         //int move = ai.calculateBestMove(field,value,6);
         int move = calculateBestMove(value,8);
@@ -38,10 +37,8 @@ public class MiniMax {
         int score = Integer.MIN_VALUE;
         for(Node move:board.legalMoves(color)){
             Board copyOfCurrent = board.copyOfBoard();
-            //place(move.x,move.y,color,copyOfCurrent);
             copyOfCurrent.place(move.x,move.y,color);
             move.setParentNode(root);
-            //move.parentNode = root;
             root.addChild(move);
             int winningColor;
             winningColor = simulatedPlays(copyOfCurrent, color * -1, move, depth, false,score);
