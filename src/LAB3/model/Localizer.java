@@ -241,15 +241,11 @@ public class Localizer implements EstimatorInterface {
             /*
             Lägger in sannolikheten för nothing.s
              */
-            double prob = 0.0833;
-            for(int i = 0;i <20;i++){
-                emissionProb[i][i] = prob;
-                emissionProb[44+i][44+i] = prob;
-            }
-            for(int i = 0; i< 4;i++){
-                emissionProb[28+i][28+i] =prob;
-                emissionProb[32+i][32+i] =prob;
-
+            for(int row = 0; row<rows*cols*head;row++) {
+                double prob = getOrXY(-1,-1,row / 16, (row % 16) / 4);//coord/rows,coord%cols);
+                emissionProb[row][row] = prob;//getOrXY(currX, currY, row / 16, (row % 16) / 4);
+                // else
+                //   emissionProb[row][row] = getOrXY(-1, -1,currX,currY);
             }
             int k= 0;
 
