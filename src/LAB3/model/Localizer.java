@@ -313,8 +313,7 @@ public class Localizer implements EstimatorInterface {
         System.out.println("Current manhattan distance between robot and estimation is:" + dx +" " + dy);
         System.out.println("Estimated (x,y) coordinates: " +pos[0] + " " + pos[1]);
         System.out.println("True coordinates (x,y): " +currX + " " + currY);
-        System.out.println(totalSum/iterationCounter);
-        System.out.println(totalSum);
+        System.out.println("avg manhattan distane: " + (totalSum/iterationCounter));
         System.out.println("Current iteration: " + iterationCounter);
     }
 
