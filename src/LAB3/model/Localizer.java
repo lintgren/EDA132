@@ -352,30 +352,19 @@ public class Localizer implements EstimatorInterface {
         if(x==rX && y==rY){
             return 0.1;
         }
-        else if(Math.abs(x-rX)<2 && Math.abs(y-rY)<2){
+        else if(Math.abs(x-rX)<2 && Math.abs(y-rY)<2 && rY!=-1 && rX!=-1){
             return 0.05;
         }
-        else if(Math.abs(x-rX)<3 && Math.abs(y-rY)<3){
+        else if(Math.abs(x-rX)<3 && Math.abs(y-rY)<3 && rY!=-1 && rX!=-1){
             return 0.025;
         }else if(rX == -1 || rY ==-1){
-            double sum = 0;
-            int nbrOfNothing =0;
-            for(int row = 0;row<rows;row++){
-                for(int column = 0; column<cols;column++){
-                    if(x==row && y==column){
-                        sum+=0.1;
-                    }
-                    else if(Math.abs(x-row)<2 && Math.abs(y-column)<2){
-                        sum +=0.05;
-                    }
-                    else if(Math.abs(x-row)<3 && Math.abs(y-column)<3){
-                        sum +=0.025;
-                    }else{
-                        nbrOfNothing+=1;
-                    }
-                }
+            if((x==0&&y==0) || (x==0&&y==3) || (x==3&&y==0) || (x==3&&y==3))
+                return 0.107759;
+            else if ((x<3&&x>0) && (y<3&&y>0))
+                return 0.0560394;
+            else{
+                return 0.0431034;
             }
-            return (1-sum)/nbrOfNothing;
         }
         return 0;
     }
