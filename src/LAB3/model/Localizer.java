@@ -207,12 +207,6 @@ public class Localizer implements EstimatorInterface {
          */
         drng.clear();
         emissionProb = new double[rows*cols*head][rows*cols*head];
-        /*System.out.println("currX: ");
-        System.out.print(currX);
-        System.out.println("currY: ");
-        System.out.print(currY);
-        */
-
         emissionProb= new double[rows*cols*head][rows*cols*head];
         for(int row = 0;row<rows;row++) {
             for (int column = 0; column < cols; column++) {
@@ -354,11 +348,11 @@ public class Localizer implements EstimatorInterface {
             return 0.025;
         }else if(rX == -1 || rY ==-1){
             if((x==0&&y==0) || (x==0&&y==3) || (x==3&&y==0) || (x==3&&y==3))
-                return 0.107759;
+                return 0.625;
             else if ((x<3&&x>0) && (y<3&&y>0))
-                return 0.0560394;
+                return 0.325;
             else{
-                return 0.0431034;
+                return 0.5;
             }
         }
         return 0;
